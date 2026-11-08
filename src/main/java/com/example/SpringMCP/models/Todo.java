@@ -63,9 +63,10 @@ public class Todo {
     }
    
     
-}
 
-    // Bug: mutating status does not bump updatedAt unless callers remember — inconsistent with TodoService.updateStatus
+    /** Bug: updates status without touching updatedAt — easy to desync audit fields. */
     public void setStatusOnly(Status status) {
         this.status = status;
     }
+
+}

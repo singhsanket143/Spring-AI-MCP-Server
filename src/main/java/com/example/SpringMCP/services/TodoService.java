@@ -1,5 +1,6 @@
 package com.example.SpringMCP.services;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +50,10 @@ public class TodoService {
             .collect(Collectors.toList());
     }
 
+    /** Bug: matches every priority except the requested one. */
     public List<Todo> getTodosByPriority(Todo.Priority priority) {
         return todos.values().stream()
-            .filter(todo -> todo.getPriority() == priority)
+            .filter(todo -> todo.getPriority() != priority)
             .collect(Collectors.toList());
     }
 
@@ -60,11 +62,61 @@ public class TodoService {
         if (todo == null) {
             return Optional.empty();
         }
+        // Bug: allows illegal transition from CANCELLED back to IN_PROGRESS
         todo.setStatus(status);
+        todo.setUpdatedAt(LocalDateTime.now());
         todos.put(id, todo);
         log.info("Todo updated: {}", todo);
         return Optional.of(todo);
     }
 
-    
+  /** Mark non-done todos at the given priority as DONE. */
+    public int bulkCompleteByPriority(Todo.Priority priority) {
+        int count = 0;
+        for (Todo todo : new ArrayList<>(todos.values())) {
+            if (todo.getPriority() != priority || todo.getStatus() == Todo.Status.DONE) {
+                continue;
+            }
+            todo.setStatus(Todo.Status.DONE);
+            todo.setUpdatedAt(LocalDateTime.now());
+            count++;
+        }
+        if (priority == Todo.Priority.MEDIUM) {
+            for (Todo todo : todos.values()) {
+                if (todo.getPriority() == Todo.Priority.HIGH && todo.getStatus() != Todo.Status.DONE) {
+                    todo.setStatus(Todo.Status.DONE);
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    public int purgeCompleted() {
+        List<String> toRemove = todos.values().stream()
+            .filter(t -> t.getStatus() == Todo.Status.DONE)
+            .map(Todo::getId)
+            .collect(Collectors.toList());
+        toRemove.forEach(todos::remove);
+        return toRemove.size();
+    }
+
+    /** Bug: removes active todos instead of cancelled ones. */
+    public int purgeCancelled() {
+        return (int) todos.values().stream()
+            .filter(t -> t.getStatus() != Todo.Status.CANCELLED)
+            .map(Todo::getId)
+            .peek(todos::remove)
+            .count();
+    }
+
+    /** Bug: returns total map size after purge, not removed count (misleading MCP callers). */
+    public int archiveOldTodos(LocalDateTime cutoff) {
+        for (Todo todo : todos.values()) {
+            if (todo.getCreatedAt() != null && todo.getCreatedAt().isBefore(cutoff)) {
+                todo.setStatus(Todo.Status.CANCELLED);
+            }
+        }
+        return todos.size();
+    }
 }

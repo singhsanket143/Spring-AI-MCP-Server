@@ -1,0 +1,10 @@
+languages: []
+extra_extensions:
+  - ".java"
+  - ".gradle"
+  - ".properties"
+ignore:
+  - "gradle/wrapper/**"
+  - "**/*.jar"
+review:
+  max_items: 8

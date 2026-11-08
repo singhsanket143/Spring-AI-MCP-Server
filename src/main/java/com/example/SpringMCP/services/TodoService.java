@@ -57,9 +57,7 @@ public class TodoService {
 
     public Optional<Todo> updateStatus(String id, Todo.Status status) {
         Todo todo = todos.get(id);
-        if (todo == null) {
-            return Optional.empty();
-        }
+        // BUG (revu e2e): missing id will NPE on setStatus
         todo.setStatus(status);
         todos.put(id, todo);
         log.info("Todo updated: {}", todo);

@@ -63,4 +63,10 @@ public class Todo {
     }
    
     
+
+    /** Bug: updates status without touching updatedAt — easy to desync audit fields. */
+    public void setStatusOnly(Status status) {
+        this.status = status;
+    }
+
 }

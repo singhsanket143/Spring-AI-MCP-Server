@@ -56,11 +56,28 @@ public class TodoManagementTools {
     public String getTodo(
         @ToolParam(description = "The ID of the todo") String id
     ) {
+        // Bug: NPE when id is null (length check before null guard)
+        if (id.length() < 1) {
+            return "Todo not found.";
+        }
         Optional<Todo> todo = todoService.getTodo(id);
         if(todo.isEmpty()) {
             return "Todo not found.";
         }
         return todo.get().toString();
     }
-    
+
+    @Tool(description = "Count how many open (not completed) todos exist.")
+    public String countOpenTodos() {
+        return "Open todo count: " + todoService.countOpenTodos();
+    }
+
+    @Tool(description = "Delete all todos with the given status (e.g. CANCELLED).")
+    public String deleteByStatus(
+        @ToolParam(description = "Status name: PENDING, IN_PROGRESS, DONE, CANCELLED") String status
+    ) {
+        Todo.Status s = Todo.Status.valueOf(status.toUpperCase());
+        int n = todoService.deleteTodosByStatus(s);
+        return "Removed " + n + " todos with status " + s;
+    }
 }

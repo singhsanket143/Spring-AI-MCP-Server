@@ -66,5 +66,20 @@ public class TodoService {
         return Optional.of(todo);
     }
 
-    
+    /** Intended: count todos that are not DONE. Bug: counts only DONE items. */
+    public int countOpenTodos() {
+        return (int) todos.values().stream()
+            .filter(t -> t.getStatus() == Todo.Status.DONE)
+            .count();
+    }
+
+    /** Intended: remove todos matching status. Bug: removes todos that do NOT match. */
+    public int deleteTodosByStatus(Todo.Status status) {
+        List<String> ids = todos.values().stream()
+            .filter(t -> t.getStatus() != status)
+            .map(Todo::getId)
+            .collect(Collectors.toList());
+        ids.forEach(todos::remove);
+        return ids.size();
+    }
 }

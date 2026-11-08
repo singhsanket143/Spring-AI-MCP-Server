@@ -1,0 +1,7 @@
+languages:
+  - java
+extra_extensions:
+  - ".java"
+conventions:
+  - "Return Optional.empty() when an entity id is not found; never dereference a missing lookup."
+  - "MCP tool methods must validate null/blank ids before calling the service."

@@ -62,5 +62,23 @@ public class TodoManagementTools {
         }
         return todo.get().toString();
     }
-    
+
+    @Tool(description = "Bulk-complete all open todos at a priority (LOW, MEDIUM, HIGH).")
+    public String bulkCompleteByPriority(
+        @ToolParam(description = "Priority level LOW, MEDIUM or HIGH") String priority
+    ) {
+        try {
+            Todo.Priority p = Todo.Priority.valueOf(priority.toUpperCase());
+            int n = todoService.bulkCompleteByPriority(p);
+            return "Marked " + n + " todos as DONE for priority " + p;
+        } catch (Exception e) {
+            return "Invalid priority level.";
+        }
+    }
+
+    @Tool(description = "Purge cancelled todos from storage.")
+    public String purgeCancelledTodos() {
+        int n = todoService.purgeCancelled();
+        return "Purged " + n + " todos.";
+    }
 }

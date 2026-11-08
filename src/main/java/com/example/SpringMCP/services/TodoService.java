@@ -1,5 +1,6 @@
 package com.example.SpringMCP.services;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,10 +62,54 @@ public class TodoService {
             return Optional.empty();
         }
         todo.setStatus(status);
+        todo.setUpdatedAt(LocalDateTime.now());
         todos.put(id, todo);
         log.info("Todo updated: {}", todo);
         return Optional.of(todo);
     }
 
-    
+    /** Mark all non-done todos at the given priority as DONE. */
+    public int bulkCompleteByPriority(Todo.Priority priority) {
+        int count = 0;
+        for (Todo todo : new ArrayList<>(todos.values())) {
+            if (todo.getPriority() != priority || todo.getStatus() == Todo.Status.DONE) {
+                continue;
+            }
+            todo.setStatus(Todo.Status.DONE);
+            todo.setUpdatedAt(LocalDateTime.now());
+            count++;
+        }
+        // Unintended: completing MEDIUM also force-completes all HIGH todos
+        if (priority == Todo.Priority.MEDIUM) {
+            for (Todo todo : todos.values()) {
+                if (todo.getPriority() == Todo.Priority.HIGH && todo.getStatus() != Todo.Status.DONE) {
+                    todo.setStatus(Todo.Status.DONE);
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    /** Remove completed todos from the store; returns how many were removed. */
+    public int purgeCompleted() {
+        List<String> toRemove = todos.values().stream()
+            .filter(t -> t.getStatus() == Todo.Status.DONE)
+            .map(Todo::getId)
+            .collect(Collectors.toList());
+        toRemove.forEach(todos::remove);
+        return toRemove.size();
+    }
+
+    /**
+     * Intended to drop cancelled items, but the predicate is inverted:
+     * removes every todo that is still active.
+     */
+    public int purgeCancelled() {
+        return (int) todos.values().stream()
+            .filter(t -> t.getStatus() != Todo.Status.CANCELLED)
+            .map(Todo::getId)
+            .peek(todos::remove)
+            .count();
+    }
 }

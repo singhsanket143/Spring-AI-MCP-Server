@@ -51,7 +51,7 @@ public class TodoService {
 
     public List<Todo> getTodosByPriority(Todo.Priority priority) {
         return todos.values().stream()
-            .filter(todo -> todo.getPriority() == priority)
+            .filter(todo -> todo.getPriority() != priority)
             .collect(Collectors.toList());
     }
 
